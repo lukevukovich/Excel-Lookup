@@ -2,16 +2,16 @@ from openpyxl import load_workbook
 
 
 # Get file name from user
-def get_file():
+def get_workbook():
     found = False
-    file_name = None
+    wb = None
     # Loop until file is found
     while not found:
         file_name = input("Excel File: ")
 
         # If file is not found/invalid
         try:
-            load_workbook(file_name)
+            wb = load_workbook(file_name)
             found = True
         except FileNotFoundError:
             print("File Not Found\n")
@@ -19,7 +19,7 @@ def get_file():
             print("Invalid File\n")
 
     print("Excel File Found")
-    return file_name
+    return wb
 
 
 # Print list of all data columns
@@ -50,6 +50,7 @@ def get_search_col(ws):
             col = input("\nSelect Search Field: ")
             # Enter x to quit
             if col.lower() == 'x':
+                # Not a search field, used as sentinel value
                 col = 0
             else:
                 col = int(col)
@@ -139,9 +140,8 @@ def print_data(ws, row):
 def main():
     print("Excel Data Lookup\n")
 
-    # Connect to file
-    file_name = get_file()
-    wb = load_workbook(file_name)
+    # Connect to excel file
+    wb = get_workbook()
     print("\nConnected to File")
 
     ws = wb.active
@@ -157,7 +157,7 @@ def main():
         print_search_cols(ws)
         search_col = get_search_col(ws)
 
-        if search_col == -1:
+        if search_col < 0:
             run_select = False
         else:
             search_col = str(chr(65 + search_col))
@@ -179,7 +179,7 @@ def main():
                     run_search = False
                 else:
                     result = search(data_search, data, index)
-                    if result != -1:
+                    if result >= 0:
                         print_data(ws, result)
                     else:
                         print("Data Not Found")
