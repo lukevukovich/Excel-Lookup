@@ -1,5 +1,7 @@
 from openpyxl import load_workbook
 
+SENTINEL_VALUE = "exit"
+
 
 # Get file name from user
 def get_workbook():
@@ -49,17 +51,17 @@ def get_search_col(ws):
         try:
             col = input("\nSelect Search Field: ")
             # Enter x to quit
-            if col.lower() == 'x':
+            if col.lower() == SENTINEL_VALUE:
                 # Not a search field, used as sentinel value
-                col = 0
+                col = -1
+                good_val = True
             else:
                 col = int(col)
-
-            if col >= 0 and col <= end_col - 65:
-                good_val = True
-                col -= 1
-            else:
-                print("Invalid Field")
+                if col > 0 and col <= end_col - 65:
+                    good_val = True
+                    col -= 1
+                else:
+                    print("Invalid Field")
         except ValueError:
             print("Invalid Field")
         except TypeError:
@@ -175,7 +177,7 @@ def main():
             while run_search:
                 data_search = input("\nEnter " + str(a_title) + ": ")
 
-                if data_search.lower() == 'x':
+                if data_search.lower() == SENTINEL_VALUE:
                     run_search = False
                 else:
                     result = search(data_search, data, index)
