@@ -22,9 +22,9 @@ def get_file():
     return file_name
 
 
-# List & get search column input
-def get_search_col(ws):
-    print("\nSearch Fields:\n0: Exit Lookup")
+# Print list of all data columns
+def print_search_cols(ws):
+    print("\nSearch Fields:")
     end_col = 65 + len(ws[1])
 
     # Loop for as many columns of data there are
@@ -37,16 +37,26 @@ def get_search_col(ws):
         col_counter += 1
         counter += 1
 
+
+# Get search column input
+def get_search_col(ws):
+    end_col = 65 + len(ws[1])
+
     # Get input for search column
     good_val = False
     col = None
     while not good_val:
         try:
             col = input("\nSelect Search Field: ")
-            col = int(col)
+            # Enter x to quit
+            if col.lower() == 'x':
+                col = 0
+            else:
+                col = int(col)
 
             if col >= 0 and col <= end_col - 65:
                 good_val = True
+                col -= 1
             else:
                 print("Invalid Field")
         except ValueError:
@@ -54,8 +64,23 @@ def get_search_col(ws):
         except TypeError:
             print("Invalid Field")
 
-    col -= 1
     return col
+
+
+def get_data_arrays(ws, search_col):
+    num_data = len(ws["A"]) - 1
+
+    # Create arrays of data
+    # Parallel arrays to keep track of index in sheet
+    data = [None] * num_data
+    index = [None] * num_data
+
+    # Set data of arrays to search column data
+    for (i) in range(num_data):
+        data[i] = str(ws[search_col + str(i + 1)].value)
+        index[i] = i + 1
+
+    return data, index
 
 
 # Selection sort based on data_array data
@@ -77,22 +102,7 @@ def sort(data_array, index_array):
 
 
 # Find data using binary search
-def search(ws, data_search, search_col):
-    num_data = len(ws["A"]) - 1
-
-    # Create arrays of data
-    # Parallel arrays to keep track of index in sheet
-    data = [None] * num_data
-    index = [None] * num_data
-
-    # Set data of arrays to search column data
-    for (i) in range(num_data):
-        data[i] = str(ws[search_col + str(i + 1)].value)
-        index[i] = i + 1
-
-    # Sort data, store in new arrays
-    data_array, index_array = sort(data, index)
-
+def search(data_search, data_array, index_array):
     # Binary search
     low = 0
     high = len(data_array) - 1
@@ -144,6 +154,7 @@ def main():
     run_select = True
     while run_select:
         # Get search column input
+        print_search_cols(ws)
         search_col = get_search_col(ws)
 
         if search_col == -1:
@@ -154,15 +165,20 @@ def main():
             # Get title of search column
             a_title = ws[search_col + "1"].value
 
+            # Get array of data & index and sort array
+            # Used for searching
+            d, i = get_data_arrays(ws, search_col)
+            data, index = sort(d, i)
+
             # Search loop
             run_search = True
             while run_search:
-                data_search = input("\nEnter " + str(a_title) + " (x: reselect search field): ")
+                data_search = input("\nEnter " + str(a_title) + ": ")
 
                 if data_search.lower() == 'x':
                     run_search = False
                 else:
-                    result = search(ws, data_search, search_col)
+                    result = search(data_search, data, index)
                     if result != -1:
                         print_data(ws, result)
                     else:
