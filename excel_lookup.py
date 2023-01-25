@@ -1,4 +1,5 @@
 from openpyxl import load_workbook
+from openpyxl.utils import get_column_letter
 
 SENTINEL_VALUE = "exit"
 
@@ -13,6 +14,7 @@ def get_workbook():
 
         # If file is not found/invalid
         try:
+            print("\nAttempting to Connect...")
             wb = load_workbook(file_name)
             found = True
         except FileNotFoundError:
@@ -20,20 +22,20 @@ def get_workbook():
         except (Exception,):
             print("Invalid File\n")
 
-    print("Excel File Found")
+    print("Connected to File\n")
     return wb
 
 
 # Print list of all data columns
 def print_search_cols(ws):
     print("\nSearch Fields:")
-    end_col = 65 + len(ws[1])
+    end_col = len(ws[1])
 
     # Loop for as many columns of data there are
-    col_counter = 65
+    col_counter = 1
     counter = 1
-    while col_counter < end_col:
-        title = str(chr(col_counter)) + str(1)
+    while col_counter < end_col + 1: 
+        title = get_column_letter(col_counter) + str(1)
         # List all columns
         print(str(counter) + ": " + str(ws[title].value))
         col_counter += 1
@@ -42,7 +44,7 @@ def print_search_cols(ws):
 
 # Get search column input
 def get_search_col(ws):
-    end_col = 65 + len(ws[1])
+    end_col = len(ws[1])
 
     # Get input for search column
     good_val = False
@@ -53,13 +55,12 @@ def get_search_col(ws):
             # Enter x to quit
             if col.lower() == SENTINEL_VALUE:
                 # Not a search field, used as sentinel value
-                col = -1
+                col = 0
                 good_val = True
             else:
                 col = int(col)
-                if col > 0 and col <= end_col - 65:
+                if col > 0 and col < end_col + 1:
                     good_val = True
-                    col -= 1
                 else:
                     print("Invalid Field")
         except ValueError:
@@ -80,8 +81,8 @@ def get_data_arrays(ws, search_col):
 
     # Set data of arrays to search column data
     for (i) in range(num_data):
-        data[i] = str(ws[search_col + str(i + 1)].value)
-        index[i] = i + 1
+        data[i] = str(ws[search_col + str(i + 2)].value)
+        index[i] = i + 2
 
     return data, index
 
@@ -127,13 +128,13 @@ def search(data_search, data_array, index_array):
 
 # Print employee data
 def print_data(ws, row):
-    end_col = 65 + len(ws[1])
+    end_col = len(ws[1])
 
     # Loop for as many columns of data there are
-    counter = 65
-    while counter < end_col:
-        title = str(chr(counter)) + str(1)
-        index = str(chr(counter)) + str(row)
+    counter = 1
+    while counter < end_col + 1:
+        title = get_column_letter(counter) + str(1)
+        index = get_column_letter(counter) + str(row)
         # List data
         print(str(ws[title].value) + ": " + str(ws[index].value))
         counter += 1
@@ -144,8 +145,6 @@ def main():
 
     # Connect to excel file
     wb = get_workbook()
-    print("\nConnected to File")
-
     ws = wb.active
 
     # Find number of data entries
@@ -159,10 +158,10 @@ def main():
         print_search_cols(ws)
         search_col = get_search_col(ws)
 
-        if search_col < 0:
+        if search_col < 1:
             run_select = False
         else:
-            search_col = str(chr(65 + search_col))
+            search_col = get_column_letter(search_col)
 
             # Get title of search column
             a_title = ws[search_col + "1"].value
